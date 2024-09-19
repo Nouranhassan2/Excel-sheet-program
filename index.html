@@ -1,0 +1,235 @@
+
+<!-- Made By Nouran Hassan -->
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>جدول المهام</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Include Firebase Libraries -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
+  
+  <!-- Tabs for different sheets -->
+  <div class="tab">
+    <button class="tablinks" onclick="openTab(event, 'InternalSheet')">نسخة من شيت المهام الداخلي</button>
+    <button class="tablinks" onclick="openTab(event, 'ClientSheet')">نسخة من شيت المهام المرسل للعميل</button>
+  </div>
+
+  <!-- Internal Sheet Tab -->
+  <div id="InternalSheet" class="tabcontent">
+    <h1>جدول إدارة المهام - الداخلي</h1>
+
+    <!-- Add Export Button -->
+    <button onclick="exportTableToCSV('internalTaskTable', 'internal_tasks.csv')">تصدير البيانات الداخلية إلى CSV</button>
+
+     <!-- Month Filter -->
+     <div class="filter-container">
+      <label for="monthFilterInternal">تصفية حسب الشهر:</label>
+      <select id="monthFilterInternal" onchange="filterByInternalMonth()">
+        <option value="">اختر الشهر</option>
+        <option value="01">يناير</option>
+        <option value="02">فبراير</option>
+        <option value="03">مارس</option>
+        <option value="04">أبريل</option>
+        <option value="05">مايو</option>
+        <option value="06">يونيو</option>
+        <option value="07">يوليو</option>
+        <option value="08">أغسطس</option>
+        <option value="09">سبتمبر</option>
+        <option value="10">أكتوبر</option>
+        <option value="11">نوفمبر</option>
+        <option value="12">ديسمبر</option>
+      </select>
+    </div>
+<!-- company filter -->
+
+
+<!-- end companyfilter -->
+
+    <!-- Internal form -->
+    <form id="internalTaskForm" class="form-container">
+      <!-- <div class="form-row">
+        <label for="رقم">الرقم:</label>
+        <input type="text" id="رقم" required>
+      </div> -->
+      <div class="form-row">
+        <label for="companyFilter">اختر اسم الشركة:</label>
+        <select id="companyFilter" class="filter" onchange="filterData()">
+            <option value="">اختر الشركة</option>
+            <!-- Company names will be dynamically added here -->
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="employeeFilter">اسم الموظف:</label>
+        <select id="employeeFilter" class="filter">
+            <option value="">اختر الموظف</option>
+            <!-- Employee names will be dynamically added here -->
+        </select>
+    </div>
+    
+    <div class="form-row">
+      <label for="jobTitleFilter">المسمى الوظيفي:</label>
+      <select id="jobTitleFilter" class="filter">
+          <option value="">اختر المسمى الوظيفي</option>
+          <!-- Job titles will be dynamically added here -->
+      </select>
+  </div>
+      <div class="form-row">
+        <label for="مرحلة_التدريب">مرحلة التدريب:</label>
+        <input type="text" id="مرحلة_التدريب" required>
+      </div>
+      <div class="form-row">
+        <label for="تاريخ_المهمة">تاريخ المهمة:</label>
+        <input type="date" id="تاريخ_المهمة" required>
+      </div>
+      <div class="form-row">
+        <label for="رقم_المهمة">رقم المهمة:</label>
+        <input type="text" id="رقم_المهمة" required>
+      </div>
+      <div class="form-row">
+        <label for="اسم_المهمة">اسم المهمة:</label>
+        <input type="text" id="اسم_المهمة" required>
+      </div>
+      <div class="form-row">
+        <label for="مرفق_المهمة">مرفق المهمة:</label>
+        <input type="text" id="مرفق_المهمة" required>
+      </div>
+      <div class="form-row">
+        <label for="رابط_المرفق">رابط المرفق:</label>
+        <input type="url" id="رابط_المرفق" required>
+      </div>
+      <div class="form-row">
+        <label for="اسناد_المهمة">إسناد المهمة:</label>
+        <input type="checkbox" id="اسناد_المهمة">
+      </div>
+      <button type="button" onclick="addRow('internalTaskTable')">إضافة مهمة جديدة</button>
+    </form>
+
+    <table id="internalTaskTable">
+      <thead>
+        <tr>
+          <!-- <th>الرقم</th> -->
+  <th>اسم الموظف</th>
+      <th>المسمى الوظيفي</th>
+      <th>مرحلة التدريب</th>
+      <th>تاريخ المهمة</th>
+      <th>رقم المهمة</th>
+      <th>اسم المهمة</th>
+      <th>مرفق المهمة</th>
+      <th>رابط المرفق</th>
+      <th>إسناد المهمة</th>
+      <th>ملاحظات الإسناد</th>
+      <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="internalTaskTableBody">
+        <!-- Rows will be dynamically added here -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Client Sheet Tab -->
+  <div id="ClientSheet" class="tabcontent">
+    <h1>جدول إدارة المهام - المرسل للعميل</h1>
+    <button onclick="exportTableToCSV('clientTaskTable', 'client_tasks.csv')">تصدير البيانات للعميل إلى CSV</button>
+
+    <!-- Month Filter -->
+    <div class="filter-container">
+      <label for="monthFilterClient">تصفية حسب الشهر:</label>
+      <select id="monthFilterClient" onchange="filterByClientMonth()">
+        <option value="">اختر الشهر</option>
+        <option value="01">يناير</option>
+        <option value="02">فبراير</option>
+        <option value="03">مارس</option>
+        <option value="04">أبريل</option>
+        <option value="05">مايو</option>
+        <option value="06">يونيو</option>
+        <option value="07">يوليو</option>
+        <option value="08">أغسطس</option>
+        <option value="09">سبتمبر</option>
+        <option value="10">أكتوبر</option>
+        <option value="11">نوفمبر</option>
+        <option value="12">ديسمبر</option>
+      </select>
+    </div>
+
+    <!-- Client form -->
+    <form id="clientTaskForm" class="form-container">
+      <div class="form-row">
+        <label for="companyFilterClient">اختر اسم الشركة:</label>
+        <select id="companyFilterClient" class="filter" onchange="filterDataClient()">
+            <option value="">اختر الشركة</option>
+            <!-- Company names will be dynamically added here -->
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="employeeFilterClient">اسم الموظف:</label>
+        <select id="employeeFilterClient" class="filter">
+            <option value="">اختر الموظف</option>
+            <!-- Employee names will be dynamically added here -->
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="jobTitleFilterClient">المسمى الوظيفي:</label>
+        <select id="jobTitleFilterClient" class="filter">
+            <option value="">اختر المسمى الوظيفي</option>
+            <!-- Job titles will be dynamically added here -->
+        </select>
+    </div>
+      <div class="form-row">
+        <label for="مرحلة_التدريب_عميل">مرحلة التدريب:</label>
+        <input type="text" id="مرحلة_التدريب_عميل" required>
+      </div>
+      <div class="form-row">
+        <label for="تاريخ_المهمة_عميل">تاريخ المهمة:</label>
+        <input type="date" id="تاريخ_المهمة_عميل" required>
+      </div>
+      <div class="form-row">
+        <label for="اسم_المهمة_عميل">اسم المهمة:</label>
+        <input type="text" id="اسم_المهمة_عميل" required>
+      </div>
+      <div class="form-row">
+        <label for="حالة_المهمة_عميل">حالة المهمة:</label>
+        <input type="text" id="حالة_المهمة_عميل" required>
+      </div>
+      <div class="form-row">
+        <label for="التفاعل_عميل">التفاعل:</label>
+        <input type="text" id="التفاعل_عميل" required>
+      </div>
+      <div class="form-row">
+        <label for="ملاحظات_المهام_عميل">ملاحظات المهام:</label>
+        <input type="text" id="ملاحظات_المهام_عميل" required>
+      </div>
+      <button type="button" onclick="addRow('clientTaskTable')">إضافة مهمة جديدة</button>
+    </form>
+
+    <table id="clientTaskTable">
+      <thead>
+        <tr>
+          <th>اسم الموظف</th>
+          <th>المسمي الوظيفي</th>
+          <th>مرحلة التدريب</th>
+          <th>تاريخ المهمة</th>
+          <th>اسم المهمة</th>
+          <th>حالة المهمة</th>
+          <th>التفاعل</th>
+          <th>ملاحظات المهام</th>
+          <th>الإجراءات</th> <!-- Add this column for actions -->
+
+        </tr>
+      </thead>
+      <tbody id="clientTaskTableBody">
+        <!-- Rows will be dynamically added here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
