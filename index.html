@@ -20,13 +20,13 @@
     <button class="tablinks" onclick="openTab(event, 'InternalSheet')">نسخة من شيت المهام الداخلي</button>
     <button class="tablinks" onclick="openTab(event, 'ClientSheet')">نسخة من شيت المهام المرسل للعميل</button>
   </div>
-
+    <!-- Add Export Button -->
+    <button onclick="exportTableToCSV('internalTaskTable', 'internal_tasks.csv')">تصدير البيانات الداخلية إلى CSV</button>
   <!-- Internal Sheet Tab -->
   <div id="InternalSheet" class="tabcontent">
     <h1>جدول إدارة المهام - الداخلي</h1>
 
-    <!-- Add Export Button -->
-    <button onclick="exportTableToCSV('internalTaskTable', 'internal_tasks.csv')">تصدير البيانات الداخلية إلى CSV</button>
+
 
      <!-- Month Filter -->
      <div class="filter-container">
@@ -68,7 +68,7 @@
  <!-- For "اسم الموظف" -->
 <div class="form-row">
   <label for="employeeFilter">اسم الموظف:</label>
-  <select id="employeeFilter">
+  <select id="employeeFilter" class="filter">
     <option value="">اختر الموظف</option>
     <!-- Employee names will be dynamically added here -->
   </select>
@@ -77,14 +77,14 @@
 <!-- For "المسمى الوظيفي" -->
 <div class="form-row">
   <label for="jobTitleFilter">المسمى الوظيفي:</label>
-  <select id="jobTitleFilter">
+  <select id="jobTitleFilter" class="filter">
     <option value="">اختر المسمى الوظيفي</option>
     <!-- Job titles will be dynamically added here -->
   </select>
 </div>
   <div class="form-row">
     <label for="مرحلة_التدريب">مرحلة التدريب:</label>
-    <select id="مرحلة_التدريب" required>
+    <select id="مرحلة_التدريب"class="filter" required>
         <option value="">اختر المرحلة</option>
         <option value="المرحلة التمهيدية">المرحلة التمهيدية</option>
         <option value="المرحلة النظرية">المرحلة النظرية</option>
@@ -113,7 +113,7 @@
       </div>
       <div class="form-row">
         <label for="مرفق_المهمة">مرفق المهمة:</label>
-        <select id="مرفق_المهمة" required>
+        <select id="مرفق_المهمة" class="filter" required>
           <option value="">اختر مرفق المهمة</option>
           <option value="ملف">ملف</option>
           <option value="فيديو">فيديو</option>
@@ -205,7 +205,7 @@
     </div>
       <div class="form-row">
         <label for="مرحلة_التدريب_عميل">مرحلة التدريب:</label>
-        <input type="text" id="مرحلة_التدريب_عميل" required>
+        <input type="text" id="مرحلة_التدريب_عميل" class="filter" required>
       </div>
       <div class="form-row">
         <label for="تاريخ_المهمة_عميل">تاريخ المهمة:</label>
@@ -217,7 +217,7 @@
       </div>
       <div class="form-row">
         <label for="حالة_المهمة_عميل">حالة المهمة:</label>
-        <select id="حالة_المهمة_عميل" required>
+        <select id="حالة_المهمة_عميل" class="filter"required>
           <option value="">اختر حالة المهمة</option>
           <option value="انتهت">انتهت</option>
           <option value="جاري العمل">جاري العمل</option>
@@ -227,7 +227,7 @@
       
       <div class="form-row">
         <label for="التفاعل_عميل">التفاعل:</label>
-        <select id="التفاعل_عميل" required>
+        <select id="التفاعل_عميل"class="filter" required>
           <option value="">اختر حالة التفاعل</option>
           <option value="متفاعل">متفاعل</option>
           <option value="تفاعل متوسط">تفاعل متوسط</option>

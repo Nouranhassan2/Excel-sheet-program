@@ -76,47 +76,62 @@ function addDataToTable(tableId, rowData) {
   const tableBody = document.getElementById(`${tableId}Body`);
   const row = document.createElement("tr");
 
-  // **تأكد من ترتيب المفاتيح بشكل صحيح**
+  // Define the ordered keys for both internal and client tables
   const orderedKeys = tableId === 'internalTaskTable'
-      ? ['employeeFilter', 'jobTitleFilter', 'مرحلة_التدريب', 'تاريخ_المهمة', 'رقم_المهمة', 'اسم_المهمة', 'مرفق_المهمة', 'رابط_المرفق', 'اسناد_المهمة', 'ملاحظات_الاسناد', 'التفاعل']
-      : ['employeeFilterClient', 'jobTitleFilterClient', 'مرحلة_التدريب_عميل', 'تاريخ_المهمة_عميل', 'اسم_المهمة_عميل', 'حالة_المهمة_عميل', 'التفاعل_عميل', 'ملاحظات_المهام_عميل'];
+    ? ['employeeFilter', 'jobTitleFilter', 'مرحلة_التدريب', 'تاريخ_المهمة', 'رقم_المهمة_الحالية', 'رقم_المهمة_القادمة', 'اسم_المهمة', 'مرفق_المهمة', 'رابط_المرفق', 'اسناد_المهمة', 'ملاحظات_الاسناد']
+    : ['employeeFilterClient', 'jobTitleFilterClient', 'مرحلة_التدريب_عميل', 'تاريخ_المهمة_عميل', 'اسم_المهمة_عميل', 'حالة_المهمة_عميل', 'التفاعل_عميل', 'ملاحظات_المهام_عميل'];
 
+  // Loop through ordered keys and generate table cells for each column
   orderedKeys.forEach(key => {
-      const cell = document.createElement("td");
-      if (key === 'رابط_المرفق') {
-          const link = document.createElement("a");
-          link.href = rowData[key] || "#";
-          link.textContent = "رابط";
-          link.target = "_blank";
-          cell.appendChild(link);
-      } else if (typeof rowData[key] === 'boolean') {
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.checked = rowData[key];
-          checkbox.disabled = true;
-          cell.appendChild(checkbox);
-      } else {
-          cell.textContent = rowData[key] || "";
-      }
-      row.appendChild(cell);
+    const cell = document.createElement("td");
+    if (key === 'رابط_المرفق') {
+      const link = document.createElement("a");
+      link.href = rowData[key] || "#";
+      link.textContent = "رابط";
+      link.target = "_blank";
+      cell.appendChild(link);
+    } else if (typeof rowData[key] === 'boolean') {
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = rowData[key];
+      checkbox.disabled = true;
+      cell.appendChild(checkbox);
+    } else {
+      cell.textContent = rowData[key] || "";
+    }
+    row.appendChild(cell);
   });
 
-  // **إضافة أزرار الإجراءات**
+  // Add the actions cell with the buttons after all other cells
   const actionsCell = document.createElement("td");
+
+  // Create and append the Edit button
   const editButton = document.createElement("button");
   editButton.textContent = "تعديل";
   editButton.onclick = () => editRow(rowData.id, tableId);
+  actionsCell.appendChild(editButton);
 
+  // Create and append the Delete button
   const deleteButton = document.createElement("button");
   deleteButton.textContent = "حذف";
-  deleteButton.onclick = () => deleteRow(rowData.id, tableId, 'clientTasks');
 
-  actionsCell.appendChild(editButton);
+  // Determine the correct collection name dynamically
+  const collectionName = tableId === 'internalTaskTable' ? 'internalTasks' : 'clientTasks';
+
+  // Attach delete function to the delete button
+  deleteButton.onclick = () => deleteRow(rowData.id, tableId, collectionName);
   actionsCell.appendChild(deleteButton);
+
+  // Append the actions cell as the last column (under "الإجراءات")
   row.appendChild(actionsCell);
 
+  // Append the row to the table body
   tableBody.appendChild(row);
 }
+
+
+
+
 
 
 
@@ -326,16 +341,26 @@ function filterByClientMonth() {
 // Function to delete a row from Firestore
 // Function to delete a row from Firestore and remove it from the table
 function deleteRow(docId, tableId, collectionName) {
+  // Log the document ID and collection name for debugging
+  console.log("Attempting to delete document with ID:", );
+  console.log("From collection:", collectionName);
+
   if (confirm("هل أنت متأكد من أنك تريد حذف هذا السجل؟")) {
-      // Delete the document from Firestore
-      db.collection(collectionName).doc(docId).delete().then(() => {
-          console.log("Document successfully deleted!");
-          loadTableData(tableId, collectionName); // Reload table data to reflect deletion
-      }).catch((error) => {
-          console.error("Error deleting document: ", error);
+    // Attempt to delete the document from Firestore
+    db.collection(collectionName).doc(docId).delete()
+      .then(() => {
+        console.log("Document successfully deleted!");
+
+        // Reload table data after successful deletion
+        loadTableData(tableId, collectionName); // This will refresh the table
+      })
+      .catch((error) => {
+        console.error("Error deleting document: ", error);
       });
   }
 }
+
+
 
 
 // Function to edit a row
