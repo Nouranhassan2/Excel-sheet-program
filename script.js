@@ -42,6 +42,7 @@ function addRow(tableId) {
 
   const form = document.getElementById(formId);
   
+  // جمع البيانات من النموذج
   const newRowData = Array.from(form.elements).reduce((data, element) => {
       if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
           data[element.id] = element.type === 'checkbox' ? element.checked : element.value;
@@ -49,37 +50,37 @@ function addRow(tableId) {
       return data;
   }, {});
 
-  // Map the employee and job title filter fields to their correct Arabic fields
-  if (tableId === 'internalTaskTable') {
-      newRowData['اسم الموظف'] = newRowData['employeeFilter']; // Save employeeFilter value as 'اسم الموظف'
-      newRowData['المسمى الوظيفي'] = newRowData['jobTitleFilter']; // Save jobTitleFilter value as 'المسمى الوظيفي'
-  }
+  // **حذف الحقول غير المستخدمة مثل `رقم المهمة الحالية`**
+  delete newRowData['رقم_المهمة_الحالية'];
+  delete newRowData['رقم_المهمة_القادمة'];
 
   // Add data to Firestore
   db.collection(collectionName).add(newRowData)
-      .then(() => {
-          console.log("Document successfully written!");
-          loadTableData(tableId, collectionName); // Reload the table to show the new data
-          form.reset();
-      })
-      .catch((error) => {
-          console.error("Error writing document: ", error);
-      });
+    .then(() => {
+        console.log("Document successfully written!");
+        loadTableData(tableId, collectionName);
+        form.reset();
+    })
+    .catch((error) => {
+        console.error("Error writing document: ", error);
+    });
 }
+
+
+
+
 
 
 // Function to add data to the clientTaskTable dynamically
 function addDataToTable(tableId, rowData) {
   const tableBody = document.getElementById(`${tableId}Body`);
-
   const row = document.createElement("tr");
 
-  // Order keys based on the table structure (internal or client)
+  // **تأكد من ترتيب المفاتيح بشكل صحيح**
   const orderedKeys = tableId === 'internalTaskTable'
-      ? ['employeeFilter', 'jobTitleFilter', 'مرحلة_التدريب', 'تاريخ_المهمة', 'رقم_المهمة', 'اسم_المهمة', 'مرفق_المهمة', 'رابط_المرفق', 'اسناد_المهمة', 'ملاحظات_الاسناد']
+      ? ['employeeFilter', 'jobTitleFilter', 'مرحلة_التدريب', 'تاريخ_المهمة', 'رقم_المهمة', 'اسم_المهمة', 'مرفق_المهمة', 'رابط_المرفق', 'اسناد_المهمة', 'ملاحظات_الاسناد', 'التفاعل']
       : ['employeeFilterClient', 'jobTitleFilterClient', 'مرحلة_التدريب_عميل', 'تاريخ_المهمة_عميل', 'اسم_المهمة_عميل', 'حالة_المهمة_عميل', 'التفاعل_عميل', 'ملاحظات_المهام_عميل'];
 
-  // Create a new table row for each key
   orderedKeys.forEach(key => {
       const cell = document.createElement("td");
       if (key === 'رابط_المرفق') {
@@ -100,7 +101,7 @@ function addDataToTable(tableId, rowData) {
       row.appendChild(cell);
   });
 
-  // Add action buttons (edit, delete)
+  // **إضافة أزرار الإجراءات**
   const actionsCell = document.createElement("td");
   const editButton = document.createElement("button");
   editButton.textContent = "تعديل";
@@ -114,8 +115,12 @@ function addDataToTable(tableId, rowData) {
   actionsCell.appendChild(deleteButton);
   row.appendChild(actionsCell);
 
-  tableBody.appendChild(row); // Append the new row to the table body
+  tableBody.appendChild(row);
 }
+
+
+
+
 
 // Load the company names and employee/job title data for ClientSheet
 document.addEventListener("DOMContentLoaded", function() {
@@ -301,65 +306,20 @@ function filterByClientMonth() {
   // delete row
   function loadTableData(tableId, collectionName) {
     const tableBody = document.getElementById(tableId + 'Body');
-
-    if (!tableBody) {
-        console.error(`Element with ID "${tableId}Body" not found.`);
-        return;
-    }
-
     tableBody.innerHTML = ""; // Clear the table to avoid duplication
-
-    // Define the ordered list of keys that matches the table column order
-    const orderedKeys = tableId === 'internalTaskTable'
-        ? ['employeeFilter', 'jobTitleFilter', 'مرحلة_التدريب', 'تاريخ_المهمة', 'رقم_المهمة', 'اسم_المهمة', 'مرفق_المهمة', 'رابط_المرفق', 'اسناد_المهمة', 'ملاحظات_الاسناد']
-        : ['employeeFilterClient', 'jobTitleFilterClient', 'مرحلة_التدريب_عميل', 'تاريخ_المهمة_عميل', 'اسم_المهمة_عميل', 'حالة_المهمة_عميل', 'التفاعل_عميل', 'ملاحظات_المهام_عميل'];
-
+  
     db.collection(collectionName).get().then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-            const task = doc.data();
-            const row = document.createElement("tr");
-
-            // Insert data into cells based on the correct order
-            orderedKeys.forEach(key => {
-                const cell = document.createElement("td");
-                if (key.includes('رابط')) {
-                    const link = document.createElement("a");
-                    link.href = task[key] || "#";
-                    link.textContent = "رابط";
-                    link.target = "_blank";
-                    cell.appendChild(link);
-                } else if (typeof task[key] === 'boolean') {
-                    const checkbox = document.createElement("input");
-                    checkbox.type = "checkbox";
-                    checkbox.checked = task[key];
-                    checkbox.disabled = true; // Make the checkbox read-only
-                    cell.appendChild(checkbox);
-                } else {
-                    cell.textContent = task[key] || ""; // Set empty string if key is missing
-                }
-                row.appendChild(cell);
-            });
-
-            // Add action buttons (Edit, Delete)
-            const actionsCell = document.createElement("td");
-            const editButton = document.createElement("button");
-            editButton.textContent = "تعديل";
-            editButton.onclick = () => editRow(doc.id, tableId);
-
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "حذف";
-            deleteButton.onclick = () => deleteRow(doc.id, tableId, collectionName);
-
-            actionsCell.appendChild(editButton);
-            actionsCell.appendChild(deleteButton);
-            row.appendChild(actionsCell);
-
-            tableBody.appendChild(row);
-        });
+      querySnapshot.forEach((doc) => {
+        const task = doc.data();
+        task.id = doc.id; // Add the document ID to the task data
+        
+        addDataToTable(tableId, task); // Insert data into the table
+      });
     }).catch((error) => {
-        console.error("Error loading data from Firestore: ", error);
+      console.error("Error loading data from Firestore: ", error);
     });
-}
+  }
+  
 
   
 // edit row

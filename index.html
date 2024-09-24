@@ -65,41 +65,61 @@
             <!-- Company names will be dynamically added here -->
         </select>
       </div>
-      <div class="form-row">
-        <label for="employeeFilter">اسم الموظف:</label>
-        <select id="employeeFilter" class="filter">
-            <option value="">اختر الموظف</option>
-            <!-- Employee names will be dynamically added here -->
-        </select>
-    </div>
-    
-    <div class="form-row">
-      <label for="jobTitleFilter">المسمى الوظيفي:</label>
-      <select id="jobTitleFilter" class="filter">
-          <option value="">اختر المسمى الوظيفي</option>
-          <!-- Job titles will be dynamically added here -->
-      </select>
-  </div>
-      <div class="form-row">
-        <label for="مرحلة_التدريب">مرحلة التدريب:</label>
-        <input type="text" id="مرحلة_التدريب" required>
-      </div>
+ <!-- For "اسم الموظف" -->
+<div class="form-row">
+  <label for="employeeFilter">اسم الموظف:</label>
+  <select id="employeeFilter">
+    <option value="">اختر الموظف</option>
+    <!-- Employee names will be dynamically added here -->
+  </select>
+</div>
+
+<!-- For "المسمى الوظيفي" -->
+<div class="form-row">
+  <label for="jobTitleFilter">المسمى الوظيفي:</label>
+  <select id="jobTitleFilter">
+    <option value="">اختر المسمى الوظيفي</option>
+    <!-- Job titles will be dynamically added here -->
+  </select>
+</div>
+  <div class="form-row">
+    <label for="مرحلة_التدريب">مرحلة التدريب:</label>
+    <select id="مرحلة_التدريب" required>
+        <option value="">اختر المرحلة</option>
+        <option value="المرحلة التمهيدية">المرحلة التمهيدية</option>
+        <option value="المرحلة النظرية">المرحلة النظرية</option>
+        <option value="مرحلة التقييم النظرى">مرحلة التقييم النظرى</option>
+        <option value="المستوى العملى">المستوى العملى</option>
+        <option value="مرحلة التقييم العملى">مرحلة التقييم العملى</option>
+        <option value="المهارات العملية">المهارات العملية</option>
+    </select>
+</div>
       <div class="form-row">
         <label for="تاريخ_المهمة">تاريخ المهمة:</label>
         <input type="date" id="تاريخ_المهمة" required>
       </div>
       <div class="form-row">
-        <label for="رقم_المهمة">رقم المهمة:</label>
-        <input type="text" id="رقم_المهمة" required>
-      </div>
+        <label for="رقم_المهمة_الحالية">رقم المهمة الحالية:</label>
+        <input type="text" id="رقم_المهمة_الحالية" required>
+    </div>
+    
+    <div class="form-row">
+        <label for="رقم_المهمة_القادمة">رقم المهمة القادمة:</label>
+        <input type="text" id="رقم_المهمة_القادمة" required>
+    </div>
       <div class="form-row">
         <label for="اسم_المهمة">اسم المهمة:</label>
         <input type="text" id="اسم_المهمة" required>
       </div>
       <div class="form-row">
         <label for="مرفق_المهمة">مرفق المهمة:</label>
-        <input type="text" id="مرفق_المهمة" required>
+        <select id="مرفق_المهمة" required>
+          <option value="">اختر مرفق المهمة</option>
+          <option value="ملف">ملف</option>
+          <option value="فيديو">فيديو</option>
+        </select>
       </div>
+      
       <div class="form-row">
         <label for="رابط_المرفق">رابط المرفق:</label>
         <input type="url" id="رابط_المرفق" required>
@@ -119,7 +139,8 @@
       <th>المسمى الوظيفي</th>
       <th>مرحلة التدريب</th>
       <th>تاريخ المهمة</th>
-      <th>رقم المهمة</th>
+      <th>رقم المهمة الحالية</th>
+      <th>رقم المهمة القادمة</th>
       <th>اسم المهمة</th>
       <th>مرفق المهمة</th>
       <th>رابط المرفق</th>
@@ -196,12 +217,24 @@
       </div>
       <div class="form-row">
         <label for="حالة_المهمة_عميل">حالة المهمة:</label>
-        <input type="text" id="حالة_المهمة_عميل" required>
+        <select id="حالة_المهمة_عميل" required>
+          <option value="">اختر حالة المهمة</option>
+          <option value="انتهت">انتهت</option>
+          <option value="جاري العمل">جاري العمل</option>
+          <option value="جديدة">جديدة</option>
+        </select>
       </div>
+      
       <div class="form-row">
         <label for="التفاعل_عميل">التفاعل:</label>
-        <input type="text" id="التفاعل_عميل" required>
+        <select id="التفاعل_عميل" required>
+          <option value="">اختر حالة التفاعل</option>
+          <option value="متفاعل">متفاعل</option>
+          <option value="تفاعل متوسط">تفاعل متوسط</option>
+          <option value="غير متفاعل">غير متفاعل</option>
+        </select>
       </div>
+      
       <div class="form-row">
         <label for="ملاحظات_المهام_عميل">ملاحظات المهام:</label>
         <input type="text" id="ملاحظات_المهام_عميل" required>
