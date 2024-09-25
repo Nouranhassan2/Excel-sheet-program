@@ -17,7 +17,7 @@
   
   <!-- Tabs for different sheets -->
   <div class="tab">
-    <button class="tablinks" onclick="openTab(event, 'InternalSheet')">نسخة من شيت المهام الداخلي</button>
+    <button class="tablinks" onclick="openTab(event, 'InternalSheet')">إسناد المهام/ مساعد إداري</button>
     <button class="tablinks" onclick="openTab(event, 'ClientSheet')">نسخة من شيت المهام المرسل للعميل</button>
   </div>
     <!-- Add Export Button -->
@@ -75,13 +75,12 @@
 </div>
 
 <!-- For "المسمى الوظيفي" -->
+<!-- For "المسمى الوظيفي" -->
 <div class="form-row">
   <label for="jobTitleFilter">المسمى الوظيفي:</label>
-  <select id="jobTitleFilter" class="filter">
-    <option value="">اختر المسمى الوظيفي</option>
-    <!-- Job titles will be dynamically added here -->
-  </select>
+  <input type="text" id="jobTitleFilter" class="filter" readonly>
 </div>
+
   <div class="form-row">
     <label for="مرحلة_التدريب">مرحلة التدريب:</label>
     <select id="مرحلة_التدريب"class="filter" required>
@@ -128,6 +127,7 @@
         <label for="اسناد_المهمة">إسناد المهمة:</label>
         <input type="checkbox" id="اسناد_المهمة">
       </div>
+  
       <button type="button" onclick="addRow('internalTaskTable')">إضافة مهمة جديدة</button>
     </form>
 
@@ -145,7 +145,6 @@
       <th>مرفق المهمة</th>
       <th>رابط المرفق</th>
       <th>إسناد المهمة</th>
-      <th>ملاحظات الإسناد</th>
       <th>الإجراءات</th>
         </tr>
       </thead>
@@ -158,7 +157,6 @@
   <!-- Client Sheet Tab -->
   <div id="ClientSheet" class="tabcontent">
     <h1>جدول إدارة المهام - المرسل للعميل</h1>
-    <button onclick="exportTableToCSV('clientTaskTable', 'client_tasks.csv')">تصدير البيانات للعميل إلى CSV</button>
 
     <!-- Month Filter -->
     <div class="filter-container">
@@ -185,9 +183,10 @@
       <div class="form-row">
         <label for="companyFilterClient">اختر اسم الشركة:</label>
         <select id="companyFilterClient" class="filter" onchange="filterDataClient()">
-            <option value="">اختر الشركة</option>
-            <!-- Company names will be dynamically added here -->
+          <option value="">اختر الشركة</option>
+          <!-- Other options dynamically populated here -->
         </select>
+        
     </div>
     <div class="form-row">
         <label for="employeeFilterClient">اسم الموظف:</label>
@@ -196,17 +195,24 @@
             <!-- Employee names will be dynamically added here -->
         </select>
     </div>
-    <div class="form-row">
-        <label for="jobTitleFilterClient">المسمى الوظيفي:</label>
-        <select id="jobTitleFilterClient" class="filter">
-            <option value="">اختر المسمى الوظيفي</option>
-            <!-- Job titles will be dynamically added here -->
-        </select>
-    </div>
-      <div class="form-row">
-        <label for="مرحلة_التدريب_عميل">مرحلة التدريب:</label>
-        <input type="text" id="مرحلة_التدريب_عميل" class="filter" required>
-      </div>
+ <!-- For "المسمى الوظيفي" -->
+ <div class="form-row">
+  <label for="jobTitleFilterClient">المسمى الوظيفي:</label>
+  <input type="text" id="jobTitleFilterClient" class="filter" readonly>
+</div>
+
+<div class="form-row">
+  <label for="مرحلة_التدريب">مرحلة التدريب:</label>
+  <select id="مرحلة_التدريب"class="filter" required>
+      <option value="">اختر المرحلة</option>
+      <option value="المرحلة التمهيدية">المرحلة التمهيدية</option>
+      <option value="المرحلة النظرية">المرحلة النظرية</option>
+      <option value="مرحلة التقييم النظرى">مرحلة التقييم النظرى</option>
+      <option value="المستوى العملى">المستوى العملى</option>
+      <option value="مرحلة التقييم العملى">مرحلة التقييم العملى</option>
+      <option value="المهارات العملية">المهارات العملية</option>
+  </select>
+</div>
       <div class="form-row">
         <label for="تاريخ_المهمة_عميل">تاريخ المهمة:</label>
         <input type="date" id="تاريخ_المهمة_عميل" required>

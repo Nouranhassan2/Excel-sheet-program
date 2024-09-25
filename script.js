@@ -1,22 +1,4 @@
-// Your web app's Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyBMzWcjvTStYVHy-BxN2hpMTSQxCBN3nXk",
-    authDomain: "excel-sheet-737fa.firebaseapp.com",
-    projectId: "excel-sheet-737fa",
-    storageBucket: "excel-sheet-737fa.appspot.com",
-    messagingSenderId: "202807179886",
-    appId: "1:202807179886:web:a3b4c83de711fc4648847f",
-    measurementId: "G-YG34XVCJ3X"
-  };
-  
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  
-  // Initialize Firestore
-  const db = firebase.firestore();
-  // companies name 
-  // Function to handle tab switching
-  function openTab(evt, tabName) {
+function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("tabcontent");
     for (i = 0; i < tabcontent.length; i++) {
@@ -28,136 +10,43 @@ const firebaseConfig = {
     }
     document.getElementById(tabName).style.display = "block";
     evt.currentTarget.className += " active";
-  }
-  
-// Function to load table data from Firestore
+}
 
-  // Function to add a new row to Firestore
-// Function to add a new row to Firestore and the internal task table
-// Function to add a new row to Firestore and display it in the clientTaskTable
-// Function to add a new row to Firestore
 function addRow(tableId) {
   const formId = tableId === 'internalTaskTable' ? 'internalTaskForm' : 'clientTaskForm';
   const collectionName = tableId === 'internalTaskTable' ? 'internalTasks' : 'clientTasks';
 
   const form = document.getElementById(formId);
-  
-  // جمع البيانات من النموذج
+  const employeeFilter = tableId === 'internalTaskTable' ? document.getElementById("employeeFilter") : document.getElementById("employeeFilterClient");
+
+  // Collect data from the form
   const newRowData = Array.from(form.elements).reduce((data, element) => {
-      if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
-          data[element.id] = element.type === 'checkbox' ? element.checked : element.value;
-      }
-      return data;
+    if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
+      data[element.id] = element.type === 'checkbox' ? element.checked : element.value;
+    }
+    return data;
   }, {});
 
-  // **حذف الحقول غير المستخدمة مثل `رقم المهمة الحالية`**
-  delete newRowData['رقم_المهمة_الحالية'];
-  delete newRowData['رقم_المهمة_القادمة'];
+  // Store the selected employee's Document ID
+  if (employeeFilter.selectedIndex > 0) {
+    newRowData["employeeFilter"] = employeeFilter.value; // Use Document ID for internal tasks
+  } else {
+    newRowData["employeeFilter"] = ""; // Empty string if no employee is selected
+  }
 
   // Add data to Firestore
   db.collection(collectionName).add(newRowData)
     .then(() => {
-        console.log("Document successfully written!");
-        loadTableData(tableId, collectionName);
-        form.reset();
+      console.log("Document successfully written!");
+      loadTableData(tableId, collectionName);  // Reload the table data
+      form.reset();  // Reset the form
     })
     .catch((error) => {
-        console.error("Error writing document: ", error);
+      console.error("Error writing document: ", error);
     });
 }
-
-
-
-
-
-
-// Function to add data to the clientTaskTable dynamically
-function addDataToTable(tableId, rowData) {
-  const tableBody = document.getElementById(`${tableId}Body`);
-  const row = document.createElement("tr");
-
-  // Define the ordered keys for both internal and client tables
-  const orderedKeys = tableId === 'internalTaskTable'
-    ? ['employeeFilter', 'jobTitleFilter', 'مرحلة_التدريب', 'تاريخ_المهمة', 'رقم_المهمة_الحالية', 'رقم_المهمة_القادمة', 'اسم_المهمة', 'مرفق_المهمة', 'رابط_المرفق', 'اسناد_المهمة', 'ملاحظات_الاسناد']
-    : ['employeeFilterClient', 'jobTitleFilterClient', 'مرحلة_التدريب_عميل', 'تاريخ_المهمة_عميل', 'اسم_المهمة_عميل', 'حالة_المهمة_عميل', 'التفاعل_عميل', 'ملاحظات_المهام_عميل'];
-
-  // Loop through ordered keys and generate table cells for each column
-  orderedKeys.forEach(key => {
-    const cell = document.createElement("td");
-    if (key === 'رابط_المرفق') {
-      const link = document.createElement("a");
-      link.href = rowData[key] || "#";
-      link.textContent = "رابط";
-      link.target = "_blank";
-      cell.appendChild(link);
-    } else if (typeof rowData[key] === 'boolean') {
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = rowData[key];
-      checkbox.disabled = true;
-      cell.appendChild(checkbox);
-    } else {
-      cell.textContent = rowData[key] || "";
-    }
-    row.appendChild(cell);
-  });
-
-  // Add the actions cell with the buttons after all other cells
-  const actionsCell = document.createElement("td");
-
-  // Create and append the Edit button
-  const editButton = document.createElement("button");
-  editButton.textContent = "تعديل";
-  editButton.onclick = () => editRow(rowData.id, tableId);
-  actionsCell.appendChild(editButton);
-
-  // Create and append the Delete button
-  const deleteButton = document.createElement("button");
-  deleteButton.textContent = "حذف";
-
-  // Determine the correct collection name dynamically
-  const collectionName = tableId === 'internalTaskTable' ? 'internalTasks' : 'clientTasks';
-
-  // Attach delete function to the delete button
-  deleteButton.onclick = () => deleteRow(rowData.id, tableId, collectionName);
-  actionsCell.appendChild(deleteButton);
-
-  // Append the actions cell as the last column (under "الإجراءات")
-  row.appendChild(actionsCell);
-
-  // Append the row to the table body
-  tableBody.appendChild(row);
-}
-
-
-
-
-
-
-
-
-
-// Load the company names and employee/job title data for ClientSheet
-document.addEventListener("DOMContentLoaded", function() {
-  loadCompanyNames();
-  loadCompanyNamesClient(); // Ensure the ClientSheet gets populated with companies
-
-  loadTableData('clientTaskTable', 'clientTasks'); // Ensure data loads for client tasks
-});
-
-
-
-  // Load data from Firestore when the page loads
-  document.addEventListener("DOMContentLoaded", function() {
-    loadTableData('internalTaskTable', 'internalTasks');
-    loadTableData('clientTaskTable', 'clientTasks');
   
-    // Open the first tab by default
-    document.getElementsByClassName("tablinks")[0].click();
-  });
-  
-  // Function to export table data to CSV
-  function exportTableToCSV(tableId, filename) {
+function exportTableToCSV(tableId, filename) {
     const table = document.getElementById(tableId);
     const rows = table.querySelectorAll('tr');
     let csvContent = "\uFEFF"; // Adding BOM for UTF-8 encoding
@@ -185,73 +74,52 @@ document.addEventListener("DOMContentLoaded", function() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }
-  // Function to filter tasks by month
-// Function to filter internal tasks by month
+}
+
 function filterByInternalMonth() {
   const selectedMonth = document.getElementById("monthFilterInternal").value;
   const collectionName = 'internalTasks';
 
   if (!selectedMonth) {
-    // إذا لم يتم اختيار شهر، قم بتحميل جميع البيانات
+    // Load all data if no month is selected
     loadTableData('internalTaskTable', collectionName);
     return;
   }
 
   const tableBody = document.getElementById('internalTaskTableBody');
-  tableBody.innerHTML = ""; // مسح الجدول قبل إضافة البيانات المُفلترة
+  tableBody.innerHTML = ""; // Clear the table before adding filtered data
 
-  // جلب البيانات من Firestore وتصفية حسب الشهر
+  // Fetch data from Firestore and filter by month
   db.collection(collectionName).get().then((querySnapshot) => {
     querySnapshot.forEach((doc) => {
       const task = doc.data();
-      const taskDate = new Date(task['تاريخ_المهمة']); // تعديل لحقل تاريخ المهمة
+      console.log("Fetched task:", task); // DEBUG: Log the fetched task data
 
-      // استخراج الشهر بصيغة رقمية ثنائية (01، 02، إلخ)
-      const taskMonth = ("0" + (taskDate.getMonth() + 1)).slice(-2);
+      const taskDate = new Date(task['تاريخ_المهمة']);
+      const taskMonth = ("0" + (taskDate.getMonth() + 1)).slice(-2); // Extract month in two digits
 
       if (taskMonth === selectedMonth) {
-        const row = document.createElement("tr");
-
-        // قائمة المفاتيح المرتبة لتناسب أعمدة الجدول
-        const orderedKeys = ['اسم_الموظف', 'المسمى_الوظيفي', 'مرحلة_التدريب', 'تاريخ_المهمة', 'رقم_المهمة', 'اسم_المهمة', 'مرفق_المهمة', 'رابط_المرفق', 'اسناد_المهمة', 'ملاحظات_الاسناد'];
-
-        // إضافة خلايا البيانات بترتيب الأعمدة
-        orderedKeys.forEach(key => {
-          const cell = document.createElement("td");
-          if (key === 'رابط_المرفق') {
-            const link = document.createElement("a");
-            link.href = task[key] || "#";
-            link.textContent = "رابط";
-            link.target = "_blank";
-            cell.appendChild(link);
-          } else if (typeof task[key] === 'boolean') {
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.checked = task[key];
-            checkbox.disabled = true;
-            cell.appendChild(checkbox);
-          } else {
-            cell.textContent = task[key] || "";
-          }
-          row.appendChild(cell);
-        });
-
-        // إضافة أزرار الإجراءات (تعديل، حذف)
-        const actionsCell = document.createElement("td");
-        const editButton = document.createElement("button");
-        editButton.textContent = "تعديل";
-        editButton.onclick = () => editRow(doc.id, 'internalTaskTable');
-
-        const deleteButton = document.createElement("button");
-        deleteButton.textContent = "حذف";
-        deleteButton.onclick = () => deleteRow(doc.id, 'internalTaskTable', collectionName);
-
-        actionsCell.appendChild(editButton);
-        actionsCell.appendChild(deleteButton);
-        row.appendChild(actionsCell);
-
-        tableBody.appendChild(row); // إضافة الصف إلى الجدول
+        // Fetch the employee name from Firestore using the employeeFilter document ID
+        if (task['employeeFilter'] && task['employeeFilter'].length === 20) {
+          db.collection('companies').doc(task['companyFilter']).collection('employees').doc(task['employeeFilter']).get()
+            .then((employeeDoc) => {
+              if (employeeDoc.exists) {
+                console.log(`Employee data for ID ${task['employeeFilter']}:`, employeeDoc.data());
+                task['employeeFilter'] = employeeDoc.data()['اسم الموظف']; // Replace document ID with employee's name
+              } else {
+                console.warn(`Employee not found for ID: ${task['employeeFilter']}`);
+                task['employeeFilter'] = 'اسم غير موجود'; // Handle case where employee doesn't exist
+              }
+              addFilteredTaskToTable(task); // Insert data into the table
+            })
+            .catch((error) => {
+              console.error("Error fetching employee data:", error);
+              task['employeeFilter'] = 'خطأ في تحميل الاسم'; // Handle fetch error
+              addFilteredTaskToTable(task); // Insert data into the table even if there's an error fetching the employee name
+            });
+        } else {
+          addFilteredTaskToTable(task); // Insert data into the table directly if there's no employeeFilter
+        }
       }
     });
   }).catch((error) => {
@@ -259,14 +127,73 @@ function filterByInternalMonth() {
   });
 }
 
+function addFilteredTaskToTable(task) {
+  const tableBody = document.getElementById('internalTaskTableBody');
+  const row = document.createElement("tr");
 
-// Function to filter client tasks by month
+  // Define the ordered keys for internal task table
+  const orderedKeys = ['employeeFilter', 'jobTitleFilter', 'مرحلة_التدريب', 'تاريخ_المهمة', 'رقم_المهمة_الحالية', 'رقم_المهمة_القادمة', 'اسم_المهمة', 'مرفق_المهمة', 'رابط_المرفق', 'اسناد_المهمة'];
+
+  // Loop through ordered keys and generate table cells for each column
+  orderedKeys.forEach(key => {
+    const cell = document.createElement("td");
+
+    // Handle employee name for internal task table
+    if (key === 'employeeFilter') {
+      const employeeName = task[key] || 'اسم غير موجود';
+      cell.textContent = employeeName;
+    } else if (key === 'رابط_المرفق') {
+      // Create a clickable link for 'رابط_المرفق'
+      const link = document.createElement("a");
+      link.href = task[key] || "#";
+      link.textContent = "رابط";
+      link.target = "_blank";
+      cell.appendChild(link);
+    } else if (typeof task[key] === 'boolean') {
+      // Create a checkbox for boolean fields
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = task[key];
+      checkbox.disabled = true;
+      cell.appendChild(checkbox);
+    } else {
+      // Default case: plain text content for other columns
+      cell.textContent = task[key] || "";
+    }
+
+    row.appendChild(cell);
+  });
+
+  // Add the actions cell with the buttons after all other cells
+  const actionsCell = document.createElement("td");
+
+  // Create and append the Edit button
+  const editButton = document.createElement("button");
+  editButton.textContent = "تعديل";
+  editButton.onclick = () => editRow(task.id, 'internalTaskTable');
+  actionsCell.appendChild(editButton);
+
+  // Create and append the Delete button
+  const deleteButton = document.createElement("button");
+  deleteButton.textContent = "حذف";
+
+  // Attach delete function to the delete button
+  deleteButton.onclick = () => deleteRow(task.id, 'internalTaskTable', 'internalTasks');
+  actionsCell.appendChild(deleteButton);
+
+  // Append the actions cell as the last column (under "الإجراءات")
+  row.appendChild(actionsCell);
+
+  // Append the row to the table body
+  tableBody.appendChild(row);
+}
+
 function filterByClientMonth() {
   const selectedMonth = document.getElementById("monthFilterClient").value;
   const collectionName = 'clientTasks';
 
   if (!selectedMonth) {
-    // If no month is selected, load all data
+    // Load all data if no month is selected
     loadTableData('clientTaskTable', collectionName);
     return;
   }
@@ -278,39 +205,33 @@ function filterByClientMonth() {
   db.collection(collectionName).get().then((querySnapshot) => {
     querySnapshot.forEach((doc) => {
       const task = doc.data();
-      const taskDate = new Date(task['تاريخ_المهمة_عميل']); // Adjust to the client task date field
+      console.log("Fetched client task:", task); // DEBUG: Log the fetched client task data
 
-      // Extract month in two digits (01, 02, etc.)
-      const taskMonth = ("0" + (taskDate.getMonth() + 1)).slice(-2);
+      const taskDate = new Date(task['تاريخ_المهمة_عميل']);
+      const taskMonth = ("0" + (taskDate.getMonth() + 1)).slice(-2); // Extract month in two digits
 
       if (taskMonth === selectedMonth) {
-        const row = document.createElement("tr");
-
-        // Define the ordered list of keys to match table columns
-        const orderedKeys = ['اسم_الموظف_عميل', 'المسمي_الوظيفي_عميل', 'مرحلة_التدريب_عميل', 'تاريخ_المهمة_عميل', 'اسم_المهمة_عميل', 'حالة_المهمة_عميل', 'التفاعل_عميل', 'ملاحظات_المهام_عميل'];
-
-        // Create table cells in the correct order
-        orderedKeys.forEach(key => {
-          const cell = document.createElement("td");
-          if (key.includes('رابط')) {
-            const link = document.createElement("a");
-            link.href = task[key] || "#";
-            link.textContent = "رابط";
-            link.target = "_blank";
-            cell.appendChild(link);
-          } else if (typeof task[key] === 'boolean') {
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.checked = task[key];
-            checkbox.disabled = true; // Make the checkbox read-only
-            cell.appendChild(checkbox);
-          } else {
-            cell.textContent = task[key] || ""; // Set empty string if key is missing
-          }
-          row.appendChild(cell);
-        });
-
-        tableBody.appendChild(row);
+        // Fetch the employee name from Firestore using the employeeFilterClient document ID
+        if (task['employeeFilterClient'] && task['employeeFilterClient'].length === 20) {
+          db.collection('companies').doc(task['companyFilterClient']).collection('employees').doc(task['employeeFilterClient']).get()
+            .then((employeeDoc) => {
+              if (employeeDoc.exists) {
+                console.log(`Employee data for ID ${task['employeeFilterClient']}:`, employeeDoc.data());
+                task['employeeFilterClient'] = employeeDoc.data()['اسم الموظف']; // Replace document ID with employee's name
+              } else {
+                console.warn(`Employee not found for ID: ${task['employeeFilterClient']}`);
+                task['employeeFilterClient'] = 'اسم غير موجود'; // Handle case where employee doesn't exist
+              }
+              addFilteredClientTaskToTable(task); // Insert data into the table
+            })
+            .catch((error) => {
+              console.error("Error fetching employee data:", error);
+              task['employeeFilterClient'] = 'خطأ في تحميل الاسم'; // Handle fetch error
+              addFilteredClientTaskToTable(task); // Insert data into the table even if there's an error fetching the employee name
+            });
+        } else {
+          addFilteredClientTaskToTable(task); // Insert data into the table directly if there's no employeeFilterClient
+        }
       }
     });
   }).catch((error) => {
@@ -318,28 +239,199 @@ function filterByClientMonth() {
   });
 }
 
-  // delete row
-  function loadTableData(tableId, collectionName) {
-    const tableBody = document.getElementById(tableId + 'Body');
-    tableBody.innerHTML = ""; // Clear the table to avoid duplication
-  
-    db.collection(collectionName).get().then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        const task = doc.data();
-        task.id = doc.id; // Add the document ID to the task data
-        
-        addDataToTable(tableId, task); // Insert data into the table
-      });
-    }).catch((error) => {
-      console.error("Error loading data from Firestore: ", error);
-    });
-  }
-  
+function addFilteredClientTaskToTable(task) {
+  const tableBody = document.getElementById('clientTaskTableBody');
+  const row = document.createElement("tr");
 
-  
-// edit row
-// Function to delete a row from Firestore
-// Function to delete a row from Firestore and remove it from the table
+  // Define the ordered keys for client task table
+  const orderedKeys = ['employeeFilterClient', 'jobTitleFilterClient', 'مرحلة_التدريب_عميل', 'تاريخ_المهمة_عميل', 'اسم_المهمة_عميل', 'حالة_المهمة_عميل', 'التفاعل_عميل', 'ملاحظات_المهام_عميل'];
+
+  // Loop through ordered keys and generate table cells for each column
+  orderedKeys.forEach(key => {
+    const cell = document.createElement("td");
+
+    if (key === 'رابط_المرفق') {
+      const link = document.createElement("a");
+      link.href = task[key] || "#";
+      link.textContent = "رابط";
+      link.target = "_blank";
+      cell.appendChild(link);
+    } else if (typeof task[key] === 'boolean') {
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = task[key];
+      checkbox.disabled = true;
+      cell.appendChild(checkbox);
+    } else {
+      cell.textContent = task[key] || "";
+    }
+
+    row.appendChild(cell);
+  });
+
+  // Add the actions cell with the buttons after all other cells
+  const actionsCell = document.createElement("td");
+
+  const editButton = document.createElement("button");
+  editButton.textContent = "تعديل";
+  editButton.onclick = () => editRow(task.id, 'clientTaskTable');
+  actionsCell.appendChild(editButton);
+
+  const deleteButton = document.createElement("button");
+  deleteButton.textContent = "حذف";
+  deleteButton.onclick = () => deleteRow(task.id, 'clientTaskTable', 'clientTasks');
+  actionsCell.appendChild(deleteButton);
+
+  row.appendChild(actionsCell);
+
+  // Append the row to the table body
+  tableBody.appendChild(row);
+}
+
+
+function loadTableData(tableId, collectionName) {
+  const tableBody = document.getElementById(tableId + 'Body');
+  tableBody.innerHTML = ""; // Clear the table to avoid duplication
+
+  // Log the collection name being queried
+  console.log(`Fetching data from collection: ${collectionName}`);
+
+  db.collection(collectionName).get().then((querySnapshot) => {
+      // Log the size of the result set
+      console.log("Number of documents retrieved:", querySnapshot.size);
+
+      if (querySnapshot.empty) {
+          console.warn("No documents found in the collection.");
+      }
+
+      querySnapshot.forEach((doc) => {
+          const task = doc.data();
+          task.id = doc.id; // Add the document ID to the task data
+          console.log(`Document ID: ${doc.id}`, task); // Log document ID and data
+
+          // Fetch employee name for internal tasks
+          if (tableId === 'internalTaskTable' && task['employeeFilter'] && task['employeeFilter'].length === 20) {
+              console.log(`Fetching employee data for Internal Task. Employee ID: ${task['employeeFilter']}, Company ID: ${task['companyFilter']}`);
+
+              // Fetch the employee name from Firestore
+              db.collection('companies').doc(task['companyFilter']).collection('employees').doc(task['employeeFilter']).get()
+                  .then((employeeDoc) => {
+                      if (employeeDoc.exists) {
+                          console.log(`Employee data for ID ${task['employeeFilter']}:`, employeeDoc.data());
+                          task['employeeFilter'] = employeeDoc.data()['اسم الموظف']; // Replace document ID with the employee's name
+                      } else {
+                          console.warn(`Employee not found for ID: ${task['employeeFilter']}`);
+                          task['employeeFilter'] = 'اسم غير موجود'; // Handle case where employee doesn't exist
+                      }
+                      addDataToTable(tableId, task); // Insert data into the table after replacing the employee ID with the name
+                  })
+                  .catch((error) => {
+                      console.error("Error fetching employee data for internal task:", error);
+                      task['employeeFilter'] = 'خطأ في تحميل الاسم'; // Handle fetch error
+                      addDataToTable(tableId, task); // Insert data into the table even if there's an error fetching the employee name
+                  });
+          }
+          // Fetch employee name for client tasks
+          else if (tableId === 'clientTaskTable' && task['employeeFilterClient'] && task['employeeFilterClient'].length === 20) {
+              console.log(`Fetching employee data for Client Task. Employee ID: ${task['employeeFilterClient']}, Company ID: ${task['companyFilter']}`);
+
+              // Check if the companyFilter exists first
+              if (task['companyFilterClient']) {
+                  // Fetch the employee name from Firestore
+                  db.collection('companies').doc(task['companyFilterClient']).collection('employees').doc(task['employeeFilterClient']).get()
+                      .then((employeeDoc) => {
+                          if (employeeDoc.exists) {
+                              console.log(`Employee data for ID ${task['employeeFilterClient']}:`, employeeDoc.data());
+                              task['employeeFilterClient'] = employeeDoc.data()['اسم الموظف']; // Replace document ID with the employee's name
+                          } else {
+                              console.warn(`Employee not found in company ${task['companyFilter']} for ID: ${task['employeeFilterClient']}`);
+                              task['employeeFilterClient'] = 'اسم غير موجود'; // Handle case where employee doesn't exist
+                          }
+                          addDataToTable(tableId, task); // Insert data into the table after replacing the employee ID with the name
+                      })
+                      .catch((error) => {
+                          console.error("Error fetching employee data for client task:", error);
+                          task['employeeFilterClient'] = 'خطأ في تحميل الاسم'; // Handle fetch error
+                          addDataToTable(tableId, task); // Insert data into the table even if there's an error fetching the employee name
+                      });
+              } else {
+                  console.error(`Company ID is missing or invalid for Document ID: ${doc.id}`);
+                  task['employeeFilterClient'] = 'خطأ في بيانات الشركة'; // Show this message only if company ID is missing
+                  addDataToTable(tableId, task); // Add the row with the error message
+              }
+          } else {
+              console.log(`Inserting task data without employee lookup:`, task);
+              addDataToTable(tableId, task); // Insert data into the table directly if there's no employeeFilterClient
+          }
+      });
+  }).catch((error) => {
+      console.error("Error loading data from Firestore: ", error);
+  });
+}
+
+function addDataToTable(tableId, task) {
+  const tableBody = document.getElementById(`${tableId}Body`);
+  const row = document.createElement("tr");
+
+  // Define the ordered keys for both internal and client tables
+  const orderedKeys = tableId === 'internalTaskTable'
+      ? ['employeeFilter', 'jobTitleFilter', 'مرحلة_التدريب', 'تاريخ_المهمة', 'رقم_المهمة_الحالية', 'رقم_المهمة_القادمة', 'اسم_المهمة', 'مرفق_المهمة', 'رابط_المرفق', 'اسناد_المهمة']
+      : ['employeeFilterClient', 'jobTitleFilterClient', 'مرحلة_التدريب_عميل', 'تاريخ_المهمة_عميل', 'اسم_المهمة_عميل', 'حالة_المهمة_عميل', 'التفاعل_عميل', 'ملاحظات_المهام_عميل'];
+
+  // Loop through ordered keys and generate table cells for each column
+  orderedKeys.forEach(key => {
+      const cell = document.createElement("td");
+
+      // Handle employee name for both internal and client sheets
+      if (key === 'employeeFilter' || key === 'employeeFilterClient') {
+          const employeeName = task[key] || 'اسم غير موجود';
+          cell.textContent = employeeName;
+      } else if (key === 'رابط_المرفق') {
+          // Create a clickable link for 'رابط_المرفق'
+          const link = document.createElement("a");
+          link.href = task[key] || "#";
+          link.textContent = "رابط";
+          link.target = "_blank";
+          cell.appendChild(link);
+      } else if (typeof task[key] === 'boolean') {
+          // Create a checkbox for boolean fields
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = task[key];
+          checkbox.disabled = true;
+          cell.appendChild(checkbox);
+      } else {
+          // Default case: plain text content for other columns
+          cell.textContent = task[key] || "";
+      }
+
+      row.appendChild(cell);
+  });
+
+  // Add the actions cell with the buttons after all other cells
+  const actionsCell = document.createElement("td");
+
+  // Create and append the Edit button
+  const editButton = document.createElement("button");
+  editButton.textContent = "تعديل";
+  editButton.onclick = () => editRow(task.id, tableId);
+  actionsCell.appendChild(editButton);
+
+  // Create and append the Delete button
+  const deleteButton = document.createElement("button");
+  deleteButton.textContent = "حذف";
+
+  // Attach delete function to the delete button
+  deleteButton.onclick = () => deleteRow(task.id, tableId, tableId === 'internalTaskTable' ? 'internalTasks' : 'clientTasks');
+  actionsCell.appendChild(deleteButton);
+
+  // Append the actions cell as the last column (under "الإجراءات")
+  row.appendChild(actionsCell);
+
+  // Append the row to the table body
+  tableBody.appendChild(row);
+}
+
 function deleteRow(docId, tableId, collectionName) {
   // Log the document ID and collection name for debugging
   console.log("Attempting to delete document with ID:", );
@@ -360,12 +452,6 @@ function deleteRow(docId, tableId, collectionName) {
   }
 }
 
-
-
-
-// Function to edit a row
-// Function to edit a row in Firestore
-// Function to edit a row in Firestore
 function editRow(docId, tableId) {
   const collectionName = tableId === 'internalTaskTable' ? 'internalTasks' : 'clientTasks';
   const formId = tableId === 'internalTaskTable' ? 'internalTaskForm' : 'clientTaskForm';
@@ -398,7 +484,6 @@ function editRow(docId, tableId) {
   });
 }
 
-// Function to save changes after editing a row
 function saveChanges(docId, tableId) {
   const collectionName = tableId === 'internalTaskTable' ? 'internalTasks' : 'clientTasks';
   const formId = tableId === 'internalTaskTable' ? 'internalTaskForm' : 'clientTaskForm';
@@ -427,15 +512,9 @@ function saveChanges(docId, tableId) {
   });
 }
 
-
-// 
-// Function to add a company and its employees (only storing names)
 function addCompanyWithEmployees(companyName, employees) {
-  // Create a new document in the 'companies' collection
   const companyRef = db.collection('companies').doc(); // Generates a new company document reference
-  const companyId = companyRef.id; // Get the generated ID for the company
 
-  // Set the company document data with "اسم الشركة"
   companyRef.set({
     "اسم الشركة": companyName // Store the company name as "اسم الشركة"
   }).then(() => {
@@ -459,8 +538,6 @@ function addCompanyWithEmployees(companyName, employees) {
   });
 }
 
-
-// Load all company names and add them to the dropdown
 function loadCompanyNames() {
   const companyFilter = document.getElementById("companyFilter");
 
@@ -480,15 +557,14 @@ function loadCompanyNames() {
   });
 }
 
-// Function to populate employee and job title dropdowns based on selected company
 function filterData() {
   const companyId = document.getElementById("companyFilter").value;
   const employeeFilter = document.getElementById("employeeFilter");
-  const jobTitleFilter = document.getElementById("jobTitleFilter");
+  const jobTitleInput = document.getElementById("jobTitleFilter"); // Job title input field
 
-  // Clear previous employee and job title options
+  // Clear previous employee options and reset job title input
   employeeFilter.innerHTML = '<option value="">اختر الموظف</option>';
-  jobTitleFilter.innerHTML = '<option value="">اختر المسمى الوظيفي</option>';
+  jobTitleInput.value = ""; // Clear job title input
 
   if (!companyId) {
     return; // If no company is selected, exit the function
@@ -496,7 +572,7 @@ function filterData() {
 
   // Fetch employees for the selected company
   db.collection('companies').doc(companyId).collection('employees').get().then((querySnapshot) => {
-    const jobTitles = new Set(); // Use a set to store unique job titles
+    const employeeDataList = []; // Store employee data
 
     querySnapshot.forEach((doc) => {
       const employeeData = doc.data();
@@ -505,27 +581,34 @@ function filterData() {
 
       // Populate employee dropdown
       const employeeOption = document.createElement('option');
-      employeeOption.value = employeeName;
+      employeeOption.value = doc.id; // Use employee document ID as the value
       employeeOption.textContent = employeeName;
       employeeFilter.appendChild(employeeOption);
 
-      // Add the job title to the set
-      jobTitles.add(jobTitle);
+      // Store employee data for later use
+      employeeDataList.push({
+        id: doc.id,
+        name: employeeName,
+        jobTitle: jobTitle
+      });
     });
 
-    // Populate job title dropdown
-    jobTitles.forEach((title) => {
-      const jobTitleOption = document.createElement('option');
-      jobTitleOption.value = title;
-      jobTitleOption.textContent = title;
-      jobTitleFilter.appendChild(jobTitleOption);
+    // When an employee is selected, find and display the corresponding job title
+    employeeFilter.addEventListener('change', function() {
+      const selectedEmployeeId = employeeFilter.value;
+      const selectedEmployee = employeeDataList.find(emp => emp.id === selectedEmployeeId);
+
+      if (selectedEmployee) {
+        jobTitleInput.value = selectedEmployee.jobTitle; // Set the job title input field
+      } else {
+        jobTitleInput.value = ""; // Clear the field if no employee is selected
+      }
     });
   }).catch((error) => {
     console.error("Error loading employees: ", error);
   });
 }
-// 
-// Load company names for ClientSheet
+
 function loadCompanyNamesClient() {
   const companyFilterClient = document.getElementById("companyFilterClient");
 
@@ -545,52 +628,79 @@ function loadCompanyNamesClient() {
   });
 }
 
-// Function to filter employees and job titles in ClientSheet
 function filterDataClient() {
   const companyId = document.getElementById("companyFilterClient").value;
   const employeeFilterClient = document.getElementById("employeeFilterClient");
-  const jobTitleFilterClient = document.getElementById("jobTitleFilterClient");
+  const jobTitleInputClient = document.getElementById("jobTitleFilterClient");
 
-  // Clear previous employee and job title options
+  // مسح الاختيارات السابقة
   employeeFilterClient.innerHTML = '<option value="">اختر الموظف</option>';
-  jobTitleFilterClient.innerHTML = '<option value="">اختر المسمى الوظيفي</option>';
+  jobTitleInputClient.value = ""; // تفريغ حقل المسمى الوظيفي
 
   if (!companyId) {
-      return; // If no company is selected, exit the function
+    return; // إذا لم يتم تحديد شركة، خروج من الدالة
   }
 
-  // Fetch employees for the selected company
+  // جلب الموظفين للشركة المحددة
   db.collection('companies').doc(companyId).collection('employees').get().then((querySnapshot) => {
-      const jobTitles = new Set(); // Use a set to store unique job titles
+    const employeeDataList = []; // قائمة لتخزين بيانات الموظفين
 
-      querySnapshot.forEach((doc) => {
-          const employeeData = doc.data();
-          const employeeName = employeeData["اسم الموظف"];
-          const jobTitle = employeeData["المسمى الوظيفي"];
+    querySnapshot.forEach((doc) => {
+      const employeeData = doc.data();
+      const employeeName = employeeData["اسم الموظف"];
+      const jobTitle = employeeData["المسمى الوظيفي"];
 
-          // Populate employee dropdown
-          const employeeOption = document.createElement('option');
-          employeeOption.value = employeeName;
-          employeeOption.textContent = employeeName;
-          employeeFilterClient.appendChild(employeeOption);
+      // إضافة خيار الموظف إلى القائمة المنسدلة
+      const employeeOption = document.createElement('option');
+      employeeOption.value = doc.id; // استخدام الـ Document ID كقيمة للـ option
+      employeeOption.textContent = employeeName;
+      employeeFilterClient.appendChild(employeeOption);
 
-          // Add the job title to the set
-          jobTitles.add(jobTitle);
+      // تخزين بيانات الموظفين لاستخدامها لاحقًا
+      employeeDataList.push({
+        id: doc.id,
+        name: employeeName,
+        jobTitle: jobTitle
       });
+    });
 
-      // Populate job title dropdown
-      jobTitles.forEach((title) => {
-          const jobTitleOption = document.createElement('option');
-          jobTitleOption.value = title;
-          jobTitleOption.textContent = title;
-          jobTitleFilterClient.appendChild(jobTitleOption);
-      });
+    // عند اختيار موظف، يتم عرض المسمى الوظيفي المقابل
+    employeeFilterClient.addEventListener('change', function() {
+      const selectedEmployeeId = employeeFilterClient.value;
+      const selectedEmployee = employeeDataList.find(emp => emp.id === selectedEmployeeId);
+
+      if (selectedEmployee) {
+        jobTitleInputClient.value = selectedEmployee.jobTitle; // عرض المسمى الوظيفي
+      } else {
+        jobTitleInputClient.value = ""; // تفريغ الحقل إذا لم يتم اختيار موظف
+      }
+    });
   }).catch((error) => {
-      console.error("Error loading employees: ", error);
+    console.error("Error loading employees: ", error);
   });
 }
 
-// Call the function to load company names when the page loads
+const firebaseConfig = {
+  apiKey: "AIzaSyBMzWcjvTStYVHy-BxN2hpMTSQxCBN3nXk",
+  authDomain: "excel-sheet-737fa.firebaseapp.com",
+  projectId: "excel-sheet-737fa",
+  storageBucket: "excel-sheet-737fa.appspot.com",
+  messagingSenderId: "202807179886",
+  appId: "1:202807179886:web:a3b4c83de711fc4648847f",
+  measurementId: "G-YG34XVCJ3X"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+document.addEventListener("DOMContentLoaded", function() {
+    loadTableData('internalTaskTable', 'internalTasks');
+    loadTableData('clientTaskTable', 'clientTasks');
+  
+    // Open the first tab by default
+    document.getElementsByClassName("tablinks")[0].click();
+});
+
 document.addEventListener("DOMContentLoaded", function() {
   loadCompanyNames();
   loadCompanyNamesClient(); // For ClientSheet
