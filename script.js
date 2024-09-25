@@ -188,6 +188,58 @@ function addFilteredTaskToTable(task) {
   tableBody.appendChild(row);
 }
 
+// function filterByClientMonth() {
+//   const selectedMonth = document.getElementById("monthFilterClient").value;
+//   const collectionName = 'clientTasks';
+
+//   if (!selectedMonth) {
+//     // Load all data if no month is selected
+//     loadTableData('clientTaskTable', collectionName);
+//     return;
+//   }
+
+//   const tableBody = document.getElementById('clientTaskTableBody');
+//   tableBody.innerHTML = ""; // Clear the table before adding filtered data
+
+//   // Fetch data from Firestore and filter by month
+//   db.collection(collectionName).get().then((querySnapshot) => {
+//     querySnapshot.forEach((doc) => {
+//       const task = doc.data();
+//       console.log("Fetched client task:", task); // DEBUG: Log the fetched client task data
+
+//       const taskDate = new Date(task['تاريخ_المهمة_عميل']);
+//       const taskMonth = ("0" + (taskDate.getMonth() + 1)).slice(-2); // Extract month in two digits
+
+//       if (taskMonth === selectedMonth) {
+//         // Fetch the employee name from Firestore using the employeeFilterClient document ID
+//         if (task['employeeFilterClient'] && task['employeeFilterClient'].length === 20) {
+//           db.collection('companies').doc(task['companyFilterClient']).collection('employees').doc(task['employeeFilterClient']).get()
+//             .then((employeeDoc) => {
+//               if (employeeDoc.exists) {
+//                 console.log(`Employee data for ID ${task['employeeFilterClient']}:`, employeeDoc.data());
+//                 task['employeeFilterClient'] = employeeDoc.data()['اسم الموظف']; // Replace document ID with employee's name
+//               } else {
+//                 console.warn(`Employee not found for ID: ${task['employeeFilterClient']}`);
+//                 task['employeeFilterClient'] = 'اسم غير موجود'; // Handle case where employee doesn't exist
+//               }
+//               addFilteredClientTaskToTable(task); // Insert data into the table
+//             })
+//             .catch((error) => {
+//               console.error("Error fetching employee data:", error);
+//               task['employeeFilterClient'] = 'خطأ في تحميل الاسم'; // Handle fetch error
+//               addFilteredClientTaskToTable(task); // Insert data into the table even if there's an error fetching the employee name
+//             });
+//         } else {
+//           addFilteredClientTaskToTable(task); // Insert data into the table directly if there's no employeeFilterClient
+//         }
+//       }
+//     });
+//   }).catch((error) => {
+//     console.error("Error filtering client tasks by month from Firestore: ", error);
+//   });
+// }
+
+
 function filterByClientMonth() {
   const selectedMonth = document.getElementById("monthFilterClient").value;
   const collectionName = 'clientTasks';
@@ -205,7 +257,7 @@ function filterByClientMonth() {
   db.collection(collectionName).get().then((querySnapshot) => {
     querySnapshot.forEach((doc) => {
       const task = doc.data();
-      console.log("Fetched client task:", task); // DEBUG: Log the fetched client task data
+      task.id = doc.id; // Ensure the document ID is saved in the task object
 
       const taskDate = new Date(task['تاريخ_المهمة_عميل']);
       const taskMonth = ("0" + (taskDate.getMonth() + 1)).slice(-2); // Extract month in two digits
@@ -216,16 +268,13 @@ function filterByClientMonth() {
           db.collection('companies').doc(task['companyFilterClient']).collection('employees').doc(task['employeeFilterClient']).get()
             .then((employeeDoc) => {
               if (employeeDoc.exists) {
-                console.log(`Employee data for ID ${task['employeeFilterClient']}:`, employeeDoc.data());
                 task['employeeFilterClient'] = employeeDoc.data()['اسم الموظف']; // Replace document ID with employee's name
               } else {
-                console.warn(`Employee not found for ID: ${task['employeeFilterClient']}`);
                 task['employeeFilterClient'] = 'اسم غير موجود'; // Handle case where employee doesn't exist
               }
               addFilteredClientTaskToTable(task); // Insert data into the table
             })
             .catch((error) => {
-              console.error("Error fetching employee data:", error);
               task['employeeFilterClient'] = 'خطأ في تحميل الاسم'; // Handle fetch error
               addFilteredClientTaskToTable(task); // Insert data into the table even if there's an error fetching the employee name
             });
@@ -238,6 +287,7 @@ function filterByClientMonth() {
     console.error("Error filtering client tasks by month from Firestore: ", error);
   });
 }
+
 
 function addFilteredClientTaskToTable(task) {
   const tableBody = document.getElementById('clientTaskTableBody');
@@ -287,7 +337,6 @@ function addFilteredClientTaskToTable(task) {
   // Append the row to the table body
   tableBody.appendChild(row);
 }
-
 
 function loadTableData(tableId, collectionName) {
   const tableBody = document.getElementById(tableId + 'Body');
@@ -376,7 +425,7 @@ function addDataToTable(tableId, task) {
   // Define the ordered keys for both internal and client tables
   const orderedKeys = tableId === 'internalTaskTable'
       ? ['employeeFilter', 'jobTitleFilter', 'مرحلة_التدريب', 'تاريخ_المهمة', 'رقم_المهمة_الحالية', 'رقم_المهمة_القادمة', 'اسم_المهمة', 'مرفق_المهمة', 'رابط_المرفق', 'اسناد_المهمة']
-      : ['employeeFilterClient', 'jobTitleFilterClient', 'مرحلة_التدريب_عميل', 'تاريخ_المهمة_عميل', 'اسم_المهمة_عميل', 'حالة_المهمة_عميل', 'التفاعل_عميل', 'ملاحظات_المهام_عميل'];
+      : ['employeeFilterClient', 'jobTitleFilterClient', 'مرحلة_التدريب', 'تاريخ_المهمة_عميل', 'اسم_المهمة_عميل', 'حالة_المهمة_عميل', 'التفاعل_عميل', 'ملاحظات_المهام_عميل'];
 
   // Loop through ordered keys and generate table cells for each column
   orderedKeys.forEach(key => {
@@ -452,37 +501,71 @@ function deleteRow(docId, tableId, collectionName) {
   }
 }
 
+// function editRow(docId, tableId) {
+//   const collectionName = tableId === 'internalTaskTable' ? 'internalTasks' : 'clientTasks';
+//   const formId = tableId === 'internalTaskTable' ? 'internalTaskForm' : 'clientTaskForm';
+//   const form = document.getElementById(formId);
+
+//   // Load the document data from Firestore into the form
+//   db.collection(collectionName).doc(docId).get().then((doc) => {
+//       if (doc.exists) {
+//           const data = doc.data();
+//           Object.keys(data).forEach(key => {
+//               const formElement = form.querySelector(`#${key}`);
+//               if (formElement) {
+//                   if (formElement.type === 'checkbox') {
+//                       formElement.checked = data[key];
+//                   } else {
+//                       formElement.value = data[key];
+//                   }
+//               }
+//           });
+
+//           // Change the add button to a save button to update the row
+//           const addButton = form.querySelector("button[onclick^='addRow']");
+//           addButton.textContent = "حفظ التغييرات";
+//           addButton.onclick = () => saveChanges(docId, tableId);
+//       } else {
+//           console.error("No such document!");
+//       }
+//   }).catch((error) => {
+//       console.error("Error getting document:", error);
+//   });
+// }
+
 function editRow(docId, tableId) {
   const collectionName = tableId === 'internalTaskTable' ? 'internalTasks' : 'clientTasks';
   const formId = tableId === 'internalTaskTable' ? 'internalTaskForm' : 'clientTaskForm';
   const form = document.getElementById(formId);
 
-  // Load the document data from Firestore into the form
+  // Load the document data from Firestore into the form using the document ID
   db.collection(collectionName).doc(docId).get().then((doc) => {
-      if (doc.exists) {
-          const data = doc.data();
-          Object.keys(data).forEach(key => {
-              const formElement = form.querySelector(`#${key}`);
-              if (formElement) {
-                  if (formElement.type === 'checkbox') {
-                      formElement.checked = data[key];
-                  } else {
-                      formElement.value = data[key];
-                  }
-              }
-          });
+    if (doc.exists) {
+      const data = doc.data();
+      Object.keys(data).forEach(key => {
+        const formElement = form.querySelector(`#${key}`);
+        if (formElement) {
+          if (formElement.type === 'checkbox') {
+            formElement.checked = data[key];
+          } else {
+            formElement.value = data[key];
+          }
+        }
+      });
 
-          // Change the add button to a save button to update the row
-          const addButton = form.querySelector("button[onclick^='addRow']");
-          addButton.textContent = "حفظ التغييرات";
-          addButton.onclick = () => saveChanges(docId, tableId);
-      } else {
-          console.error("No such document!");
-      }
+      // Change the add button to a save button to update the row
+      const addButton = form.querySelector("button[onclick^='addRow']");
+      addButton.textContent = "حفظ التغييرات";
+      addButton.onclick = () => saveChanges(docId, tableId);
+    } else {
+      console.error("No such document!");
+    }
   }).catch((error) => {
-      console.error("Error getting document:", error);
+    console.error("Error getting document:", error);
   });
 }
+
+
 
 function saveChanges(docId, tableId) {
   const collectionName = tableId === 'internalTaskTable' ? 'internalTasks' : 'clientTasks';
