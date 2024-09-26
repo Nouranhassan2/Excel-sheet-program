@@ -21,12 +21,16 @@
     <button class="tablinks" onclick="openTab(event, 'ClientSheet')">نسخة من شيت المهام المرسل للعميل</button>
   </div>
     <!-- Add Export Button -->
-    <button onclick="exportTableToCSV('internalTaskTable', 'internal_tasks.csv')">تصدير البيانات الداخلية إلى CSV</button>
+
+    <!-- Add Export Button for Client Data -->
+
   <!-- Internal Sheet Tab -->
   <div id="InternalSheet" class="tabcontent">
     <h1>جدول إدارة المهام - الداخلي</h1>
 
 
+<div class="box">
+  <button onclick="exportTableToCSV('internalTaskTable', 'internal_tasks.csv')" class="buttun-csv">تصدير البيانات الداخلية إلى CSV</button>
 
      <!-- Month Filter -->
      <div class="filter-container">
@@ -47,6 +51,8 @@
         <option value="12">ديسمبر</option>
       </select>
     </div>
+
+  </div>
 <!-- company filter -->
 
 
@@ -157,6 +163,8 @@
   <!-- Client Sheet Tab -->
   <div id="ClientSheet" class="tabcontent">
     <h1>جدول إدارة المهام - المرسل للعميل</h1>
+<div class="box">
+  <button onclick="exportTableToCSV('clientTaskTable', 'client_tasks.csv')" class="buttun-csv">تصدير البيانات إلى CSV للعميل</button>
 
     <!-- Month Filter -->
     <div class="filter-container">
@@ -177,6 +185,7 @@
         <option value="12">ديسمبر</option>
       </select>
     </div>
+  </div>
 
     <!-- Client form -->
     <form id="clientTaskForm" class="form-container">
